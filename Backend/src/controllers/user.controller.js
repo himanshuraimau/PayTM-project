@@ -84,5 +84,27 @@ const signIn = asyncHandler(async (req, res) => {
     })
 })
 
+const updateBody = zod.object({
+	password: zod.string().optional(),
+    firstName: zod.string().optional(),
+    lastName: zod.string().optional(),
+})
 
-export { signUp,signIn };
+const updateDeatils = asyncHandler(async (req, res) => {
+    const { success } = updateBody.safeParse(req.body)
+    if (!success) {
+        res.status(411).json({
+            message: "Error while updating information"
+        })
+    }
+
+    await User.updateOne(req.body, {
+        _id: req.userId
+    })
+
+    res.json({
+        message: "Updated successfully"
+    })
+})
+
+export { signUp,signIn ,updateDeatils};
