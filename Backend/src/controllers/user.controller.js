@@ -2,7 +2,7 @@ import zod from "zod";
 import {User} from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import { asyncHandler } from "../utils/asyncHandler.js";
-
+import { Account } from "../models/account.model.js";
 
 const signupBody = zod.object({
     username: zod.string().email(),
@@ -38,6 +38,16 @@ const signUp = asyncHandler(async (req, res) => {
         lastName: req.body.lastName,
     })
     const userId = user._id;
+
+    /// ----- Create new account ------
+
+    await Account.create({
+        userId,
+        balance: 1 + Math.random() * 10000
+    })
+
+		/// -----  ------
+
 
     const token = jwt.sign({
         userId
@@ -106,5 +116,29 @@ const updateDeatils = asyncHandler(async (req, res) => {
         message: "Updated successfully"
     })
 })
+const bulk = asyncHandler(async (req, res) => {
+    const filter = req.query.filter || "";
 
-export { signUp,signIn ,updateDeatils};
+    const users = await User.find({
+        $or: [{
+            firstName: {
+                "$regex": filter
+            }
+        }, {
+            lastName: {
+                "$regex": filter
+            }
+        }]
+    })
+
+    res.json({
+        user: users.map(user => ({
+            username: user.username,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            _id: user._id
+        }))
+    })
+})
+
+export { signUp,signIn ,updateDeatils,bulk};
